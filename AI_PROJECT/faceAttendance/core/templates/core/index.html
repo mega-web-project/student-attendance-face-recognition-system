@@ -1,0 +1,188 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container emp-profile">
+<h1 class="text-center py-1 text-uppercase" style="
+   font-family: verdana;
+    font-weight: bold;
+    text-align: center;
+    font-size: 35px;
+    color: rgb(79, 176, 145);
+    text-shadow: rgb(0, 0, 0) 2px 2px 2px;
+
+">
+        Mark Yourself Present
+</h1><hr class="text-dark">
+    <div class="row">
+        <div class="col-md-3">
+            <a href="{% url 'details' %}" class="">
+            <img src="{% static 'img/fcicon.png'%}" alt="" width="50%">
+             </a>
+            <div class="col-md-12" style="margin-left:-2em;">
+                 <a target="_blank" class="scan" href="{% url 'details' %}">
+                    <input type="submit" class="profile-edit-btn m-2"
+                    name="btnAddMore" value="Run Scanner" />
+                  </a>
+            </div>
+
+        </div>
+        <div class="col-md-6">
+            <div class="profile-head">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <a   href="{% url 'profiles' %}"><input type="submit" class="profile-edit-btn m-2 "
+                        name="btnAddMore" value="Profiles" /></a>
+        </div>
+    </div>
+    <hr>
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item text-uppercase fs-2" role="presentation">
+            <a class="nav-link active" id="present-tab" data-toggle="tab" href="#present" role="tab"
+                aria-controls="home" aria-selected="true">Present</a>
+        </li>
+        <li class="nav-item text-uppercase" role="presentation">
+            <a class="nav-link" id="absent-tab" data-toggle="tab" href="#absent" role="tab" aria-controls="profile"
+                aria-selected="false">Details</a>
+        </li>
+        <li class="nav-item text-uppercase" role="presentation">
+            <a class="nav-link" id="history-tab" data-toggle="tab" href="#history" role="tab" aria-controls="contact"
+                aria-selected="false">Attendance</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+        <br>
+        <div class="tab-pane fade show active" id="present" role="tabpanel" aria-labelledby="home-tab">
+
+            <table class="table table-striped ">
+                <thead>
+                    <tr>
+                        <th scope="col"> </th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Student ID</th>
+                        <th scope="col">Entry Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in present %}
+                    <tr>
+                        <th scope="row">-</th>
+                        <td>{{profile.first_name}} {{profile.last_name}}</td>
+                        <td>{{profile.student}}</td>
+                        <td>{{profile.updated |date:"D: M :Y, h:iA" }}</td>
+
+                    </tr>
+                    {% endfor%}
+                </tbody>
+            </table>
+            <a href="{% url 'reset' %}"><button type="button" class="btn btn-secondary">Reset</button></a>
+            <a href="{% url 'index' %}"><button type="button" class="btn btn-primary">Refresh</button></a>
+            <a href="">
+            <button type="button" class="btn btn-success"  onclick="exportTableToCSV('Attendace.csv')">Download
+            </button>
+            </a>
+
+        </div>
+
+        <div class="tab-pane fade" id="absent" role="tabpanel" aria-labelledby="profile-tab">
+            <table class="table table-striped ">
+                <thead>
+                    <tr>
+                        <th scope="col"> </th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in absent %}
+                    <tr>
+                        <th scope="row">-</th>
+                        <td>{{profile.first_name}} {{profile.last_name}}</td>
+                        <td>{{profile.status}}</td>
+                        <td>{{profile.student}}</td>
+                    </tr>
+                    {% endfor%}
+                </tbody>
+            </table>
+
+        </div>
+
+        <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="contact-tab">
+            <table class="table table-striped ">
+                <thead>
+                    <tr>
+                        <th scope="col"> </th>
+                        <th scope="col">Profile ID</th>
+                        <th scope="col">Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for face in scanned %}
+                    <tr>
+                        <th scope="row">-</th>
+                        <td>{{face.last_face}}</td>
+                        <td>{{face.date}}</td>
+                        
+                    </tr>
+                    {% endfor%}
+                </tbody>
+            </table>
+            <a href="{% url 'clear_history' %}"><button type="button" class="btn btn-outline-secondary">Clear History</button></a>
+        </div>
+    </div>
+
+</div>
+<script>
+    $(".scan").click(function () {
+        var postData = { csrfmiddlewaretoken: '{{ csrf_token }}' }
+        $.ajax({
+            url: "{% url 'scan' %}",
+            data: {
+
+            },
+        });
+    });
+
+
+
+
+//user-defined function to download CSV file  
+function downloadCSV(csv, filename) {  
+    var csvFile;  
+    var downloadLink;  
+     
+    //define the file type to text/csv  
+    csvFile = new Blob([csv], {type: 'text/csv'});  
+    downloadLink = document.createElement("a");  
+    downloadLink.download = filename;  
+    downloadLink.href = window.URL.createObjectURL(csvFile);  
+    downloadLink.style.display = "none";  
+  
+    document.body.appendChild(downloadLink);  
+    downloadLink.click();  
+}  
+  
+//user-defined function to export the data to CSV file format  
+function exportTableToCSV(filename) {  
+    
+   //declare a JavaScript variable of array type  
+   var csv = [];  
+   var rows = document.querySelectorAll("thead, tr");  
+   
+   //merge the whole data in tabular form   
+   for(var i=0; i<rows.length; i++) {  
+    var row = [], cols = rows[i].querySelectorAll("td, th");  
+    for( var j=0; j<cols.length; j++)  
+       row.push(cols[j].innerText);  
+       csv.push(row.join(","));  
+   }   
+   //call the function to download the CSV file  
+   downloadCSV(csv.join("\n"), filename);  
+}  
+
+</script>
+
+{% endblock content %}
